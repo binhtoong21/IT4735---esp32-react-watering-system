@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "system": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isDisabled').val() !== true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('isDisabled').val() !== true"
+    },
+    "history": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isDisabled').val() !== true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('isDisabled').val() !== true"
+    },
+    "users": {
+        ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    }
+  }
+}

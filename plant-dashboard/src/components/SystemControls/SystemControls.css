@@ -1,0 +1,193 @@
+.system-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.control-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 24px 36px -28px rgba(15, 23, 42, 0.4);
+}
+
+.control-card__header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.control-card__title {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #0f172a;
+}
+
+.control-card__subtitle {
+    margin: 0;
+    color: #475569;
+    font-size: 0.95rem;
+}
+
+.control-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.control-card__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.control-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-card__actions--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.control-card__note {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.text--on { color: #047857; }
+.text--off { color: #b91c1c; }
+
+
+
+/* --- Copied General Styles REMOVED (Moved to index.css) --- */
+
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 56px;
+  height: 30px;
+}
+.toggle__input { display: none; }
+.toggle__slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+.toggle__slider::after {
+  content: "";
+  position: absolute;
+  left: 4px; top: 4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  transition: transform 0.2s ease;
+}
+.toggle__input:checked + .toggle__slider {
+  background: linear-gradient(135deg, #34d399, #10b981);
+}
+.toggle__input:checked + .toggle__slider::after {
+  transform: translateX(26px);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+}
+.status-pill--on {
+  background: rgba(34, 197, 94, 0.15);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.status-pill--off {
+  background: rgba(226, 232, 240, 1);
+  color: #475569;
+}
+/* ... existing styles ... */
+
+/* CSS for 3-Mode Selector */
+.full-width-card {
+  grid-column: 1 / -1; /* Span full width */
+}
+
+.mode-selector-body {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.mode-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.mode-btn--active {
+  background-color: #ecfdf5; /* Greenish bg */
+  color: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
+}
+
+.mode-btn--active:nth-child(3) { /* Drip mode specific color */
+  background-color: #eff6ff;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+.error-message {
+  background: #fee;
+  border: 1px solid #f88;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  color: #c33;
+  font-size: 14px;
+}
+
+.input-error {
+  border-color: #f88 !important;
+}
+
+.field-error {
+  display: block;
+  color: #c33;
+  font-size: 12px;
+  margin-top: 4px;
+}

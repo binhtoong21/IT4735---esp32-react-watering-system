@@ -1,0 +1,27 @@
+# OS junk
+.DS_Store
+Thumbs.db
+*.log
+
+# Dependency directories
+node_modules/
+dist/
+build/
+.cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Secrets (CRITICAL)
+credentials_backup.txt
+.env
+.env.local
+.env.*.local
+*.secret
+google-services.json
+
+# Firebase
+.firebase/
+firebase-debug.log

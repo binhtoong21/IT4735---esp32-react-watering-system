@@ -1,0 +1,28 @@
+/* Header.css */
+.app__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Changed from flex-start to center for better alignment */
+  gap: 16px;
+}
+
+.app__title-block h1 {
+  margin: 0;
+  font-size: 2.4rem;
+  color: #0f172a;
+}
+
+.app__subtitle {
+  margin: 12px 0 0;
+  font-size: 1.05rem;
+  color: #475569;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+
+/* Button styles moved to index.css */

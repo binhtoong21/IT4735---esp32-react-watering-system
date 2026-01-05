@@ -1,0 +1,43 @@
+{
+  "history": {
+    "-OhfiNvZCChVBaKMMkwi": {
+      "ts": 1767587127750,
+      "val": 23
+    },
+    "-Ohfkjm2gcmnd6LuMkQj": {
+      "ts": 1767587187723,
+      "val": 21
+    },
+    "-OhfknQlOPud8euTzPjo": {
+      "ts": 1767587247696,
+      "val": 23
+    }
+  },
+  "system": {
+    "autoMode": true,
+    "drip": {
+      "off": 10,
+      "on": 5
+    },
+    "mode": 2,
+    "pumpStatus": 1,
+    "soilMoisture": 24,
+    "threshold": {
+      "max": 50,
+      "min": 30
+    }
+  },
+  "users": {
+    "W4NGDvYFpMcykedkAYjKijMLnsq2": {
+      "createdAt": "2025-12-29T18:27:41.459Z",
+      "email": "user1@test.com",
+      "isDisabled": false,
+      "role": "user"
+    },
+    "sjwzCljNSjcJeCWDAxknlueNJjq2": {
+      "email": "admin@test.com",
+      "isDisabled": false,
+      "role": "admin"
+    }
+  }
+}
