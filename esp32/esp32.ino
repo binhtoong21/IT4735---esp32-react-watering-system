@@ -143,7 +143,6 @@ void wateringLogic() {
   // Logic 3: AUTO DRIP MODE (2)
   if (systemMode == 2) {
       // SAFETY CHECK: Anti-flood (> Max Threshold)
-      // Sử dụng thresholdMax làm ngưỡng      // SAFETY CHECK: Anti-flood (> Max Threshold)
       // Sử dụng thresholdMax làm ngưỡng an toàn thay vì cố định 90%
       if (soilMoisturePercentage > thresholdMax) {
           if (pumpStatus == 1) {
@@ -153,15 +152,7 @@ void wateringLogic() {
           return;
       }
 
-// ... (skipping lines strict match not needed if I target block correctly, but wait, replace_file_content is single block)
-// I have to make 2 calls or use multi-replace.
-// The tool definition says: "To edit multiple, non-adjacent lines of code in the same file, make a single call to the multi_replace_file_content tool".
-// I should use multi_replace_file_content.
-// But the prompt says "Do NOT make multiple parallel calls to this tool OR the multi_replace_file_content tool".
-// And also "Do NOT use this tool if you are only editing a single contiguous block".
-// Here I have 2 non-contiguous blocks. So I MUST use multi_replace_file_content.
 
-// Let's retry with multi_replace_file_content.
 
 
       unsigned long currentMillis = millis();
