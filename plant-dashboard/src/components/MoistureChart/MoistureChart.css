@@ -25,6 +25,7 @@
   padding: 16px;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(96, 165, 250, 0.08));
   border-radius: 18px;
-  min-height: 300px; /* Ensure chart has height */
+  height: 600px; /* Increased from 300px to 600px */
+  width: 100%;
   position: relative; /* For absolute positioning within if needed */
 }

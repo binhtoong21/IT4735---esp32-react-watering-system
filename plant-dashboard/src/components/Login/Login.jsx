@@ -32,10 +32,12 @@ function Login() {
       // Login success is handled by AuthContext state change in App.jsx
     } catch (error) {
       console.error("Login Result:", error);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         setAuthError("Email hoặc mật khẩu không chính xác.");
       } else if (error.code === 'auth/too-many-requests') {
         setAuthError("Quá nhiều lần thử thất bại. Vui lòng thử lại sau.");
+      } else if (error.message === 'ACCOUNT_LOCKED') {
+        setAuthError("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
       } else {
         setAuthError("Đăng nhập thất bại: " + error.message);
       }
@@ -82,7 +84,16 @@ function Login() {
             />
           </label>
 
-          {authError && <div className="auth-error">{authError}</div>}
+          {authError && (
+            <div className={`auth-error ${authError.toLowerCase().includes("khóa") ? "locked" : ""}`}>
+              {authError.toLowerCase().includes("khóa") ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              )}
+              <span>{authError}</span>
+            </div>
+          )}
 
           <button type="submit" className="btn btn--primary" disabled={isLoginDisabled}>
             {isLoading ? "Đang xử lý..." : "Đăng nhập"}

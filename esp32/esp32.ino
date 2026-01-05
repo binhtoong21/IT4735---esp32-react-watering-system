@@ -1,63 +1,52 @@
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-#include <ArduinoJson.h> // https://github.com/bblanchon/ArduinoJson
+#include <WiFiManager.h>
+#include <ArduinoJson.h>
 #include <FS.h>
 #include <SPIFFS.h>
 
-// 1. CẤU HÌNH PHẦN CỨNG
 #define SOIL_MOISTURE_PIN 32
 #define RELAY_PIN 27
-#define LED_PIN 2            // Đèn LED tích hợp (thường là GPIO 2)
-#define TRIGGER_PIN 0        // Nút Boot (GPIO 0) để reset cấu hình
-#define PUMP_ON LOW
-#define PUMP_OFF HIGH
+#define LED_PIN 2
+#define TRIGGER_PIN 0
+#define PUMP_ON HIGH
+#define PUMP_OFF LOW
 
-// 2. BIẾN TOÀN CỤC & CONFIG
-// Giá trị mặc định (sẽ bị ghi đè bởi giá trị trong flash)
 char firebase_host[100] = ""; 
-char firebase_auth[100] = ""; // Đây là API Key
+char firebase_auth[100] = "";
 char firebase_user[100] = "";
 char firebase_pass[100] = "";
 
-// Firebase Objects
 FirebaseData fbdo;
 FirebaseConfig fbConfig;
 FirebaseAuth fbAuth;
 FirebaseData streamData;
 
-// Logic Variables
 unsigned long lastUpdateMillis = 0;
 const long updateInterval = 1000;
 bool shouldRunLogicInstantly = false;
 int soilMoisturePercentage = 0;
 int pumpStatus = 0;
 
-// --- 3-MODE SYSTEM GLOBALS ---
-int systemMode = 1; // 0: Manual, 1: Auto Sensor, 2: Auto Drip
-// Mặc định an toàn là Auto Sensor
+int systemMode = 1;
 
 int thresholdMin = 40;
 int thresholdMax = 70;
 
-// Drip Mode Params
-int dripOnTime = 5;  // Giây
-int dripOffTime = 10; // Giây
+int dripOnTime = 5;
+int dripOffTime = 10;
 unsigned long lastDripMillis = 0;
 bool isDripOn = false;
-bool pumpChanged = false; // Flag to sync status to Firebase
+bool pumpChanged = false;
 
-// Calibration
-const int AIR_MAX_ADC = 4095;
-const int WATER_MIN_ADC = 0;
+const int AIR_MAX_ADC = 3300;
+const int WATER_MIN_ADC = 1200;
 
-// File config name
 const char* config_file = "/config.json";
 bool shouldSaveConfig = false;
 
-// 3. HÀM HỖ TRỢ (FILESYSTEM)
 void saveConfigCallback() {
-  Serial.println("Should save config");
+  Serial.println("Phát hiện cấu hình mới, bật cờ lưu...");
   shouldSaveConfig = true;
 }
 
@@ -81,7 +70,7 @@ void loadConfig() {
       }
     }
   } else {
-    Serial.println("Failed to mount FS");
+    Serial.println("Lỗi: Không thể mount File System");
   }
 }
 
@@ -94,17 +83,17 @@ void saveConfig() {
 
   File configFile = SPIFFS.open(config_file, "w");
   if (!configFile) {
-    Serial.println("Failed to open config file for writing");
+    Serial.println("Lỗi: Không thể mở file để ghi");
     return;
   }
   serializeJson(json, configFile);
   configFile.close();
-  Serial.println("Config saved");
+  Serial.println("Đã lưu cấu hình thành công");
 }
 
-// 4. LOGIC TƯỚI CÂY & CONTROL
 int convertToPercentage(int rawValue) {
   int percentage = map(rawValue, WATER_MIN_ADC, AIR_MAX_ADC, 100, 0);
+  
   if (percentage > 100) return 100;
   if (percentage < 0) return 0;
   return percentage;
@@ -121,17 +110,16 @@ void controlPump(bool state) {
 }
 
 void wateringLogic() {
-  // Logic 1: MANUAL MODE (0)
   if (systemMode == 0) return;
 
-  // Logic 2: AUTO SENSOR MODE (1)
   if (systemMode == 1) {
       if (soilMoisturePercentage < thresholdMin) {
         if (pumpStatus == 0) {
           controlPump(true);
           pumpChanged = true;
         }
-      } else if (soilMoisturePercentage > thresholdMax) {
+      } 
+      else if (soilMoisturePercentage > thresholdMax) {
         if (pumpStatus == 1) {
           controlPump(false);
           pumpChanged = true;
@@ -140,10 +128,7 @@ void wateringLogic() {
       return;
   }
 
-  // Logic 3: AUTO DRIP MODE (2)
   if (systemMode == 2) {
-      // SAFETY CHECK: Anti-flood (> Max Threshold)
-      // Sử dụng thresholdMax làm ngưỡng an toàn thay vì cố định 90%
       if (soilMoisturePercentage > thresholdMax) {
           if (pumpStatus == 1) {
               controlPump(false);
@@ -152,18 +137,15 @@ void wateringLogic() {
           return;
       }
 
-
-
-
       unsigned long currentMillis = millis();
       unsigned long interval = isDripOn ? (dripOnTime * 1000) : (dripOffTime * 1000);
 
       if (currentMillis - lastDripMillis >= interval) {
           lastDripMillis = currentMillis;
-          isDripOn = !isDripOn; // Toggle
+          isDripOn = !isDripOn;
           controlPump(isDripOn);
           pumpChanged = true;
-          Serial.printf("Drip: %s\n", isDripOn ? "ON" : "OFF");
+          Serial.printf("Drip Mode: Chuyển sang %s\n", isDripOn ? "ON" : "OFF");
       }
   }
 }
@@ -171,6 +153,7 @@ void wateringLogic() {
 void updateSoilMoistureToFirebase() {
   if (Firebase.ready() && WiFi.status() == WL_CONNECTED) {
     Firebase.RTDB.setIntAsync(&fbdo, "/system/soilMoisture", soilMoisturePercentage);
+    
     if (pumpChanged) {
         Firebase.RTDB.setIntAsync(&fbdo, "/system/pumpStatus", pumpStatus);
         pumpChanged = false;
@@ -180,27 +163,23 @@ void updateSoilMoistureToFirebase() {
 
 void streamCallback(FirebaseStream data) {
   String path = data.dataPath();
-  Serial.printf("Stream: %s -> %s\n", path.c_str(), data.payload().c_str());
+  Serial.printf("Stream nhận: %s -> %s\n", path.c_str(), data.payload().c_str());
 
-  // 1. Pump Status (Only in Manual Mode)
   if (path == "/pumpStatus") {
     if (systemMode == 0) {
         int status = data.intData();
         controlPump(status == 1);
-        pumpChanged = false; // Prevent logic overwrite
+        pumpChanged = false;
     }
   }
-  // 2. System Mode
   else if (path == "/mode" || path == "/autoMode") {
     int oldMode = systemMode;
-    // Map bool autoMode (false=0, true=1) or int mode
     if (data.dataTypeEnum() == firebase_rtdb_data_type_boolean) {
          systemMode = data.boolData() ? 1 : 0;
     } else {
          systemMode = data.intData();
     }
     
-    // Safety switch off if mode changed
     if (oldMode != systemMode) {
         controlPump(false);
         pumpChanged = true;
@@ -209,32 +188,28 @@ void streamCallback(FirebaseStream data) {
     }
     shouldRunLogicInstantly = true;
   }
-  // 3. Thresholds
   else if (path == "/threshold/min") thresholdMin = data.intData();
   else if (path == "/threshold/max") thresholdMax = data.intData();
-  // 4. Drip Params
   else if (path == "/drip/on")  dripOnTime = data.intData();
   else if (path == "/drip/off") dripOffTime = data.intData();
 }
 
 void streamTimeoutCallback(bool timeout) {
-  if (timeout) Serial.println("Stream timeout, resuming...");
+  if (timeout) Serial.println("Stream timeout -> Đang kết nối lại...");
 }
 
-// 5. SETUP
 void setup() {
   Serial.begin(115200);
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
   
+  pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, PUMP_OFF);
   digitalWrite(LED_PIN, LOW);
 
-  // 1. Load config
   loadConfig();
 
-  // 2. Setup WiFiManager
   WiFiManager wm;
   wm.setSaveConfigCallback(saveConfigCallback);
   
@@ -249,7 +224,7 @@ void setup() {
   wm.addParameter(&custom_fb_pass);
 
   if (digitalRead(TRIGGER_PIN) == LOW) {
-    Serial.println("Resetting Config...");
+    Serial.println("Đang Reset toàn bộ cấu hình...");
     wm.resetSettings();
     SPIFFS.format();
     delay(2000);
@@ -269,8 +244,8 @@ void setup() {
      }
   }
 
-  digitalWrite(LED_PIN, LOW); // Connected
-  Serial.println("WiFi Connected!");
+  digitalWrite(LED_PIN, LOW);
+  Serial.println("Đã kết nối WiFi thành công!");
 
   strcpy(firebase_host, custom_fb_host.getValue());
   strcpy(firebase_auth, custom_fb_key.getValue());
@@ -279,7 +254,6 @@ void setup() {
 
   if (shouldSaveConfig) saveConfig();
   
-  // 3. Setup Firebase
   fbConfig.host = firebase_host;
   fbConfig.api_key = firebase_auth;
   fbAuth.user.email = firebase_user;
@@ -303,7 +277,6 @@ void setup() {
     }
     Firebase.RTDB.setStreamCallback(&streamData, streamCallback, streamTimeoutCallback);
     
-    // Sync initial state
     if (Firebase.RTDB.getBool(&fbdo, "/system/autoMode")) {
        systemMode = fbdo.to<bool>() ? 1 : 0;
     }
@@ -317,11 +290,9 @@ void setup() {
   }
 }
 
-// 6. LOOP
 void loop() {
-  // Logic nút Reset cứng (nếu muốn reset lúc đang chạy)
   if (digitalRead(TRIGGER_PIN) == LOW) {
-    delay(3000); // Giữ 3 giây
+    delay(3000);
     if (digitalRead(TRIGGER_PIN) == LOW) {
        WiFiManager wm;
        wm.resetSettings();
@@ -333,7 +304,6 @@ void loop() {
   if (Firebase.ready() && WiFi.status() == WL_CONNECTED) {
     unsigned long currentMillis = millis();
     
-    // LOGIC 1: Cập nhật điều khiển & Realtime (mỗi 1 giây)
     if (currentMillis - lastUpdateMillis >= updateInterval || shouldRunLogicInstantly) {
        if (!shouldRunLogicInstantly) {
           lastUpdateMillis = currentMillis;
@@ -346,28 +316,24 @@ void loop() {
        updateSoilMoistureToFirebase();
     }
 
-    // LOGIC 2: Ghi lịch sử (Mỗi 60 giây) -> Để vẽ biểu đồ lâu dài
     static unsigned long lastHistoryMillis = 0;
-    const unsigned long historyInterval = 60000; // 60s (Production)
+    const unsigned long historyInterval = 60000;
     
     if (currentMillis - lastHistoryMillis >= historyInterval) {
         lastHistoryMillis = currentMillis;
         
-        // Tạo JSON object để push
         FirebaseJson json;
         json.set("val", soilMoisturePercentage);
-        // Lưu timestamp của Server (Firebase)
         json.set("ts/.sv", "timestamp"); 
 
-        Serial.print("Pushing history... ");
+        Serial.print("Đang ghi lịch sử... ");
         if (Firebase.RTDB.pushJSON(&fbdo, "/history", &json)) {
-            Serial.println("OK");
+            Serial.println("Thành công");
         } else {
             Serial.println(fbdo.errorReason());
         }
     }
   } else {
-    // Xử lý mất kết nối
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("Mất kết nối WiFi! Đang thử kết nối lại...");
         delay(5000);

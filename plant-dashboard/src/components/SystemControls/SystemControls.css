@@ -181,6 +181,61 @@
   font-size: 14px;
 }
 
+
+/* Moisture Card Styles */
+.moisture-status-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+
+.moisture-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moisture-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #3b82f6;
+  z-index: 2;
+}
+
+.moisture-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(0deg); /* Start from top */
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 2.5;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.moisture-label {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
 .input-error {
   border-color: #f88 !important;
 }

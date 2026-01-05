@@ -16,31 +16,28 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userRole, setUserRole] = useState(null); // 'admin' | 'user'
+  const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setLoading(true);
+
       if (user) {
-        // Fetch User Role from Database
+
         try {
           const snapshot = await get(child(ref(database), `users/${user.uid}`));
           if (snapshot.exists()) {
             const userData = snapshot.val();
-            // Check if user is disabled
             if (userData.isDisabled) {
               await signOut(auth);
               setUserRole(null);
               setCurrentUser(null);
-              alert("Tài khoản của bạn đã bị vô hiệu hóa.");
+
             } else {
               setUserRole(userData.role || "user");
               setCurrentUser(user);
             }
           } else {
-            // New user or no record -> Default to 'user' or handle accordingly
-            // For now, let's treat them as a regular user with no special role info
             setUserRole("user");
             setCurrentUser(user);
           }
@@ -59,8 +56,28 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+  async function login(email, password) {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const user = result.user;
+    
+
+    try {
+      const snapshot = await get(child(ref(database), `users/${user.uid}`));
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        if (userData.isDisabled) {
+          await signOut(auth);
+          throw new Error("ACCOUNT_LOCKED");
+        }
+      }
+    } catch (error) {
+       if (error.message === "ACCOUNT_LOCKED") {
+         throw error;
+       }
+       console.error("Check user status failed:", error);
+    }
+    
+    return result;
   }
 
   function logout() {

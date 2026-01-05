@@ -3,7 +3,7 @@ import { Line } from "react-chartjs-2";
 import "./MoistureChart.css";
 
 function MoistureChart({ chartData }) {
-  // Memoize chart options to prevent re-creation
+
   const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,

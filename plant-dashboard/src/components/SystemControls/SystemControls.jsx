@@ -17,7 +17,7 @@ function SystemControls({
 }) {
   const [errors, setErrors] = useState({});
 
-  // Validation helpers
+
   const validateThreshold = (min, max) => {
     const newErrors = {};
     
@@ -49,7 +49,7 @@ function SystemControls({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handlers with validation
+
   const handleSaveMin = () => {
     if (validateThreshold(minThreshold, maxThreshold)) {
       updateValue("system/threshold/min", minThreshold);
@@ -81,7 +81,6 @@ function SystemControls({
   return (
     <section className="system-controls-grid">
       
-      {/* CARD 1: MODE SELECTION */}
       <div className="control-card full-width-card">
         <div className="control-card__header">
           <h3 className="control-card__title">
@@ -112,7 +111,6 @@ function SystemControls({
         </div>
       </div>
 
-      {/* CARD 2: AUTO SENSOR SETTINGS */}
       {systemMode === 1 && (
         <div className="control-card">
           <div className="control-card__header">
@@ -163,7 +161,6 @@ function SystemControls({
         </div>
       )}
 
-      {/* CARD 3: DRIP MODE SETTINGS */}
       {systemMode === 2 && (
         <div className="control-card">
           <div className="control-card__header">
@@ -228,7 +225,36 @@ function SystemControls({
         </div>
       )}
 
-      {/* CARD 4: PUMP MANUAL CONTROL */}
+      <div className="control-card">
+        <div className="control-card__header">
+          <h3 className="control-card__title">Độ Ẩm Đất</h3>
+          <p className="control-card__subtitle">Cập nhật thời gian thực</p>
+        </div>
+        <div className="control-card__body moisture-status-body">
+          <div className="moisture-circle">
+            <span className="moisture-value">{soilMoisture}%</span>
+            <svg className="moisture-ring" viewBox="0 0 36 36">
+              <path
+                className="ring-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                className="ring-progress"
+                strokeDasharray={`${soilMoisture}, 100`}
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+          </div>
+          <div className="moisture-label">
+            {soilMoisture < minThreshold ? "Đất Khô" : soilMoisture > maxThreshold ? "Đất Ướt" : "Đủ Ẩm"}
+          </div>
+        </div>
+      </div>
+
       <div className="control-card">
         <div className="control-card__header">
           <h3 className="control-card__title">Trạng thái Bơm</h3>
