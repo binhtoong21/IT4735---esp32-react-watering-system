@@ -301,6 +301,8 @@
     }
   }
 
+  unsigned long lastReconnectMillis = 0;
+
   void loop() {
     if (digitalRead(TRIGGER_PIN) == LOW) {
       delay(3000);
@@ -312,21 +314,28 @@
       }
     }
 
-    if (Firebase.ready() && WiFi.status() == WL_CONNECTED) {
-      unsigned long currentMillis = millis();
-      
-      if (currentMillis - lastUpdateMillis >= updateInterval || shouldRunLogicInstantly) {
-        if (!shouldRunLogicInstantly) {
-            lastUpdateMillis = currentMillis;
-            int rawValue = analogRead(SOIL_MOISTURE_PIN);
-            soilMoisturePercentage = convertToPercentage(rawValue);
-        }
-        shouldRunLogicInstantly = false;
-        
-        wateringLogic();
-        updateSoilMoistureToFirebase();
-      }
+    unsigned long currentMillis = millis();
 
+    // 1. LOGIC & SENSOR (LUÔN CHẠY dù có mạng hay không)
+    if (currentMillis - lastUpdateMillis >= updateInterval || shouldRunLogicInstantly) {
+      if (!shouldRunLogicInstantly) {
+          lastUpdateMillis = currentMillis;
+          int rawValue = analogRead(SOIL_MOISTURE_PIN);
+          soilMoisturePercentage = convertToPercentage(rawValue);
+      }
+      shouldRunLogicInstantly = false;
+      
+      wateringLogic();
+
+      // Chỉ gửi update nếu có mạng (đã được throttle bởi updateInterval 1s hoặc shouldRunLogicInstantly)
+      if (Firebase.ready() && WiFi.status() == WL_CONNECTED) {
+          updateSoilMoistureToFirebase();
+      }
+    }
+
+    // 2. NETWORK TASKS (Chỉ chạy khi có mạng)
+    if (Firebase.ready() && WiFi.status() == WL_CONNECTED) {
+      // Ghi lịch sử
       static unsigned long lastHistoryMillis = 0;
       const unsigned long historyInterval = 60000;
       
@@ -345,9 +354,15 @@
           }
       }
     } else {
-      if (WiFi.status() != WL_CONNECTED) {
-          Serial.println("Mất kết nối WiFi! Đang thử kết nối lại...");
-          delay(5000);
+      // Xử lý khi mất mạng (Non-blocking)
+      if (currentMillis - lastReconnectMillis > 5000) {
+          lastReconnectMillis = currentMillis;
+          if (WiFi.status() != WL_CONNECTED) {
+             Serial.println("Mất kết nối WiFi... Hệ thống vẫn đang chạy offline.");
+             WiFi.reconnect();
+          } else if (!Firebase.ready()) {
+             Serial.println("Mất kết nối Firebase...");
+          }
       }
     }
   }
